@@ -12,7 +12,6 @@ const ExamPrep = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    years: '', // Will be a comma-separated string
     downloadUrl: '',
     answersNote: '',
   });
@@ -50,10 +49,7 @@ const ExamPrep = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const dataToSubmit = {
-      ...formData,
-      years: formData.years.split(',').map(y => y.trim()).filter(Boolean),
-    };
+    const dataToSubmit = { ...formData };
 
     try {
       if (isEditing) {
@@ -99,7 +95,6 @@ const ExamPrep = () => {
     setFormData({
       name: examPrep.name,
       description: examPrep.description,
-      years: examPrep.years.join(', '),
       downloadUrl: examPrep.downloadUrl,
       answersNote: examPrep.answersNote,
     });
@@ -147,7 +142,6 @@ const ExamPrep = () => {
     setFormData({
       name: '',
       description: '',
-      years: '',
       downloadUrl: '',
       answersNote: '',
     });
@@ -188,18 +182,6 @@ const ExamPrep = () => {
                 className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#006D5B]/50 focus:border-[#006D5B] outline-none transition-all duration-200" 
                 required 
               />
-            </div>
-            <div className="flex flex-col space-y-1">
-              <label className="text-sm font-medium text-gray-700">Years</label>
-              <input 
-                type="text" 
-                name="years" 
-                value={formData.years} 
-                onChange={handleInputChange} 
-                placeholder="e.g., 2020, 2021, 2022" 
-                className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#006D5B]/50 focus:border-[#006D5B] outline-none transition-all duration-200" 
-              />
-              <p className="text-xs text-gray-500 mt-1">Enter years as comma-separated values</p>
             </div>
             <div className="flex flex-col space-y-1">
               <label className="text-sm font-medium text-gray-700">Google Drive URL <span className="text-red-500">*</span></label>
@@ -275,7 +257,6 @@ const ExamPrep = () => {
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Years</th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -287,11 +268,6 @@ const ExamPrep = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-700 line-clamp-2">{prep.description}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
-                        {Array.isArray(prep.years) ? prep.years.join(', ') : prep.years}
-                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">

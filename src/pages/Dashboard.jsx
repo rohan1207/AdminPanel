@@ -1,314 +1,203 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { apiFetch } from "../utils/api";
-import { compressImage } from "../utils/compressImage";
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { apiFetch } from '../utils/api';
 
-// SVG Icon Components
-const ProjectIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-8 w-8 text-blue-500"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-    />
+// Icons for the dashboard cards
+const UsersIcon = () => (
+  <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
   </svg>
 );
 
-const EventIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-8 w-8 text-purple-500"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-    />
+const BlogIcon = () => (
+  <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
   </svg>
 );
 
-const VideoIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-8 w-8 text-red-500"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"
-    />
+const ExamIcon = () => (
+  <svg className="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
   </svg>
 );
 
 const TopicIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-8 w-8 text-indigo-500"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M7 7h10M7 11h10M7 15h6M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"
-    />
+  <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
   </svg>
 );
 
-const InternIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-8 w-8 text-green-500"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7-7h14a7 7 0 00-7 7z"
-    />
+const BookIcon = () => (
+  <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
   </svg>
 );
 
-const TeamIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-8 w-8 text-yellow-500"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7-7h14a7 7 0 00-7 7z"
-    />
-  </svg>
-);
-
-const StatItem = ({ label, value, to, icon }) => (
-  <Link
-    to={to}
-    className="block bg-white rounded-xl shadow-md hover:shadow-lg transition-all p-4 sm:p-6 cursor-pointer hover:scale-[1.02] border-l-4 border-brand"
-  >
-    <div className="flex items-center space-x-4">
-      <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-full">
-        {icon}
-      </div>
-      <div className="text-left">
-        <div className="text-2xl sm:text-3xl font-bold text-neutral-900">
-          {value}
+const StatCard = ({ title, value, icon, link, loading }) => (
+  <Link to={link} className="block">
+    <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 h-full">
+      <div className="flex items-center">
+        <div className="p-3 rounded-full bg-opacity-10 mr-4" style={{ backgroundColor: icon.props.className.includes('text-blue-500') ? 'rgba(59, 130, 246, 0.1)' : 
+                                                                          icon.props.className.includes('text-green-500') ? 'rgba(34, 197, 94, 0.1)' :
+                                                                          icon.props.className.includes('text-purple-500') ? 'rgba(168, 85, 247, 0.1)' :
+                                                                          icon.props.className.includes('text-yellow-500') ? 'rgba(234, 179, 8, 0.1)' :
+                                                                          'rgba(239, 68, 68, 0.1)' }}>
+          {icon}
         </div>
-        <div className="text-gray-500 text-sm font-medium uppercase tracking-wider">
-          {label}
+        <div>
+          <p className="text-gray-500 text-sm font-medium">{title}</p>
+          {loading ? (
+            <div className="h-8 w-16 bg-gray-200 rounded animate-pulse mt-1"></div>
+          ) : (
+            <p className="text-2xl font-bold text-gray-800">{value}</p>
+          )}
         </div>
       </div>
     </div>
   </Link>
 );
 
-const HeroImageManager = () => {
-  const [heroImage, setHeroImage] = useState(null);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+const Dashboard = () => {
+  const [stats, setStats] = useState({
+    users: 0,
+    blogs: 0,
+    examPreps: 0,
+    topicSummaries: 0,
+    recommendedBooks: 0,
+    loading: true,
+    error: null
+  });
 
   useEffect(() => {
-    const fetchHeroImage = async () => {
+    const fetchStats = async () => {
       try {
-        const data = await apiFetch("/hero-image");
-        setHeroImage(data.imageUrl);
-      } catch (err) {
-        console.log("No hero image found, which is okay.");
+        // Fetch all data in parallel
+        const [usersData, blogsData, examPrepsData, topicSummariesData, booksData] = await Promise.all([
+          apiFetch('/users/count'),
+          apiFetch('/blogs/count'),
+          apiFetch('/exam-preparations/count'),
+          apiFetch('/topic-summaries/count'),
+          apiFetch('/recommended-books/count')
+        ]);
+
+        setStats({
+          users: usersData.count || 0,
+          blogs: blogsData.count || 0,
+          examPreps: examPrepsData.count || 0,
+          topicSummaries: topicSummariesData.count || 0,
+          recommendedBooks: booksData.count || 0,
+          loading: false
+        });
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+        setStats(prev => ({
+          ...prev,
+          error: 'Failed to load dashboard data',
+          loading: false
+        }));
       }
     };
-    fetchHeroImage();
+
+    fetchStats();
   }, []);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-      setPreview(URL.createObjectURL(file));
-      setError("");
-      setSuccess("");
-    }
-  };
-
-  const handleUpload = async () => {
-    if (!selectedFile) {
-      setError("Please select an image first.");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-    setSuccess("");
-
-    try {
-      const compressedFile = await compressImage(selectedFile);
-
-      const formData = new FormData();
-      formData.append("image", compressedFile, compressedFile.name);
-
-      const updatedImage = await apiFetch("/hero-image", {
-        method: "PUT",
-        body: formData,
-      });
-
-      setHeroImage(updatedImage.imageUrl);
-      setSuccess("Hero image updated successfully!");
-      setSelectedFile(null);
-      setPreview(null);
-    } catch (err) {
-      setError(err.message || "Failed to update hero image.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-      <h2 className="text-xl sm:text-2xl font-bold mb-4 text-brand">
-        Manage Home Page Hero Image
-      </h2>
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 sm:p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h3 className="font-semibold text-lg mb-2">Current Hero Image</h3>
-            {heroImage ? (
-              <img
-                src={heroImage}
-                alt="Current Hero"
-                className="w-full h-auto rounded-lg shadow"
-              />
-            ) : (
-              <p className="text-gray-500">No hero image set.</p>
-            )}
-          </div>
-          <div>
-            <h3 className="font-semibold text-lg mb-2">Upload New Image</h3>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-            />
-            {preview && (
-              <div className="mt-4">
-                <p className="font-semibold mb-2">New Image Preview:</p>
-                <img
-                  src={preview}
-                  alt="New hero preview"
-                  className="w-full h-auto rounded-lg shadow"
-                />
-              </div>
-            )}
-            <button
-              onClick={handleUpload}
-              disabled={loading || !selectedFile}
-              className="mt-4 w-full bg-brand hover:bg-brand-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              {loading ? "Uploading..." : "Update Image"}
-            </button>
-            {error && <p className="text-red-500 mt-2">{error}</p>}
-            {success && <p className="text-green-500 mt-2">{success}</p>}
+  if (stats.error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border-l-4 border-red-500 p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">{stats.error}</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-};
-
-const Dashboard = () => {
-  const [stats, setStats] = useState(null);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        // Fetch counts for current admin resources. Endpoints should be implemented in the backend.
-        const [blogs, recommendedBooks, topics, examItems] = await Promise.all([
-          apiFetch("/blogs"),
-          apiFetch("/recommended-books"),
-          apiFetch("/topic-summaries"),
-          apiFetch("/exam-preparations"),
-        ]);
-        setStats({
-          blogs: Array.isArray(blogs) ? blogs.length : blogs.count ?? 0,
-          recommendedBooks: Array.isArray(recommendedBooks)
-            ? recommendedBooks.length
-            : recommendedBooks.count ?? 0,
-          topics: Array.isArray(topics) ? topics.length : topics.count ?? 0,
-          examPreparation: Array.isArray(examItems)
-            ? examItems.length
-            : examItems.count ?? 0,
-        });
-      } catch (err) {
-        setError(err.message || "Failed to load stats");
-      }
-    };
-    load();
-  }, []);
-
-  if (error) return <div className="text-red-500 p-4">{error}</div>;
-  if (!stats)
-    return <div className="p-4 text-center">Loading dashboard...</div>;
+    );
+  }
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto mt-10">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-800 dark:text-white">
-        Dashboard
-      </h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <StatItem
-          label="Blogs"
-          value={stats.blogs}
-          to="/admin/manage-blogs"
-          icon={<ProjectIcon />}
-        />
-        <StatItem
-          label="Recommended Books"
-          value={stats.recommendedBooks}
-          to="/admin/recommend-books"
-          icon={<EventIcon />}
-        />
-        <StatItem
-          label="Concept Capsules"
-          value={stats.topics}
-          to="/admin/topic-summaries"
-          icon={<FileIcon />}
-        />
-        <StatItem
-          label="Exam Preparation"
-          value={stats.examPreparation}
-          to="/admin/exam-preparation"
-          icon={<VideoIcon />}
-        />
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Dashboard Overview</h1>
+          <p className="text-gray-600 mt-1">Welcome back! Here's what's happening with your site.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
+          <StatCard
+            title="Total Users"
+            value={stats.users}
+            icon={<UsersIcon />}
+            link="/admin/users"
+            loading={stats.loading}
+          />
+          <StatCard
+            title="Blog Posts"
+            value={stats.blogs}
+            icon={<BlogIcon />}
+            link="/admin/manage-blogs"
+            loading={stats.loading}
+          />
+          <StatCard
+            title="Exam Preps"
+            value={stats.examPreps}
+            icon={<ExamIcon />}
+            link="/admin/exam-preparation"
+            loading={stats.loading}
+          />
+          <StatCard
+            title="Topic Summaries"
+            value={stats.topicSummaries}
+            icon={<TopicIcon />}
+            link="/admin/topic-summaries"
+            loading={stats.loading}
+          />
+          <StatCard
+            title="Recommended Books"
+            value={stats.recommendedBooks}
+            icon={<BookIcon />}
+            link="/admin/recommend-books"
+            loading={stats.loading}
+          />
+        </div>
+
+        {/* Add more dashboard sections here as needed */}
+        
+        <div className="bg-white rounded-xl shadow-md p-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Link
+              to="/admin/manage-blogs/new"
+              className="p-4 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center text-center"
+            >
+              <span>+ New Blog Post</span>
+            </Link>
+            <Link
+              to="/admin/exam-preparation/new"
+              className="p-4 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors flex items-center justify-center text-center"
+            >
+              <span>+ New Exam Prep</span>
+            </Link>
+            <Link
+              to="/admin/topic-summaries/new"
+              className="p-4 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors flex items-center justify-center text-center"
+            >
+              <span>+ New Topic Summary</span>
+            </Link>
+            <Link
+              to="/admin/recommend-books/new"
+              className="p-4 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center text-center"
+            >
+              <span>+ Add Book</span>
+            </Link>
+          </div>
+        </div>
       </div>
-      <HeroImageManager />
     </div>
   );
 };
