@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE } from '../utils/api';
 
 // Helper to call backend API. Adjust base path if your frontend proxies to backend.
 async function postJson(url, body) {
@@ -7,7 +8,6 @@ async function postJson(url, body) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
-    credentials: 'include',
   });
   const text = await res.text();
   try {
@@ -32,8 +32,8 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-  // Backend mounts admin routes at /api/admin (see Backend/server.js)
-  const data = await postJson('/api/admin/login', { username, password });
+      // Use absolute backend URL in production
+      const data = await postJson(`${API_BASE}/admin/login`, { username, password });
       // store token and username locally (consider using httpOnly cookie from backend for better security)
       localStorage.setItem('adminToken', data.token);
       localStorage.setItem('adminUsername', data.username);
