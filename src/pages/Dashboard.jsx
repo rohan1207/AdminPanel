@@ -51,20 +51,21 @@ const StatCard = ({ title, value, icon, link, loading }) => {
       <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 h-full">
         <div className="flex items-center">
           <div className="p-3 rounded-full bg-opacity-10 mr-4" style={{ backgroundColor: getBackgroundColor() }}>
-          {icon}
-        </div>
-        <div>
-          <p className="text-gray-500 text-sm font-medium">{title}</p>
-          {loading ? (
-            <div className="h-8 w-16 bg-gray-200 rounded animate-pulse mt-1"></div>
-          ) : (
-            <p className="text-2xl font-bold text-gray-800">{value}</p>
-          )}
+            {icon}
+          </div>
+          <div>
+            <p className="text-gray-500 text-sm font-medium">{title}</p>
+            {loading ? (
+              <div className="h-8 w-16 bg-gray-200 rounded animate-pulse mt-1"></div>
+            ) : (
+              <p className="text-2xl font-bold text-gray-800">{value}</p>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  </Link>
-);
+    </Link>
+  );
+};
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
