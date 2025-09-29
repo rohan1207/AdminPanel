@@ -33,15 +33,24 @@ const BookIcon = () => (
   </svg>
 );
 
-const StatCard = ({ title, value, icon, link, loading }) => (
-  <Link to={link} className="block">
-    <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 h-full">
-      <div className="flex items-center">
-        <div className="p-3 rounded-full bg-opacity-10 mr-4" style={{ backgroundColor: icon.props.className.includes('text-blue-500') ? 'rgba(59, 130, 246, 0.1)' : 
-                                                                          icon.props.className.includes('text-green-500') ? 'rgba(34, 197, 94, 0.1)' :
-                                                                          icon.props.className.includes('text-purple-500') ? 'rgba(168, 85, 247, 0.1)' :
-                                                                          icon.props.className.includes('text-yellow-500') ? 'rgba(234, 179, 8, 0.1)' :
-                                                                          'rgba(239, 68, 68, 0.1)' }}>
+const StatCard = ({ title, value, icon, link, loading }) => {
+  // Default background color if className check fails
+  const getBackgroundColor = () => {
+    if (!icon || !icon.props || !icon.props.className) return 'rgba(59, 130, 246, 0.1)';
+    
+    const className = icon.props.className;
+    if (className.includes('text-blue-500')) return 'rgba(59, 130, 246, 0.1)';
+    if (className.includes('text-green-500')) return 'rgba(34, 197, 94, 0.1)';
+    if (className.includes('text-purple-500')) return 'rgba(168, 85, 247, 0.1)';
+    if (className.includes('text-yellow-500')) return 'rgba(234, 179, 8, 0.1)';
+    return 'rgba(239, 68, 68, 0.1)';
+  };
+
+  return (
+    <Link to={link} className="block">
+      <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 h-full">
+        <div className="flex items-center">
+          <div className="p-3 rounded-full bg-opacity-10 mr-4" style={{ backgroundColor: getBackgroundColor() }}>
           {icon}
         </div>
         <div>
