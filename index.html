@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+ 
+
+
+
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aagaur Studio - Admin Panel</title>
+  <meta name="description" content="At Aagaur, we reimagine commercial spaces with creativity, precision, and purpose. Specializing in Design & Build and General Contracting with 20 years of experience.">
+  <meta name="keywords" content="commercial design, office design, retail space, construction, bangalore">
+  
+  <!-- Open Graph tags for social sharing -->
+  <meta property="og:title" content="Aagaur Studio - Admin Panel">
+  <meta property="og:description" content="Reimagining commercial spaces with creativity, precision, and purpose">
+  <meta property="og:url" content="https://www.yangadsartgallery.in/">
+  <meta property="og:type" content="website">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      // Check if we need to redirect to a specific path
+      (function() {
+        const redirect = sessionStorage.getItem('redirect');
+        if (redirect) {
+          sessionStorage.removeItem('redirect');
+          if (redirect !== location.pathname) {
+            history.replaceState(null, null, redirect);
+          }
+        }
+      })();
+    </script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": "https://www.aagaurstudio.com/",
+  "name": "Aagaur Studio",
+  "url": "https://www.aagaurstudio.com/",
+  "logo": "https://www.aagaurstudio.com/logo.png",
+  "description": "Reimagining commercial spaces with creativity, precision, and purpose. Specializing in Design & Build and General Contracting.",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "",
+    "addressLocality": "Bhopal",
+    "addressCountry": "India"
+  },
+  "telephone": "+91 96060 64203",
+  "email": "connect@aagaurstudio.com",
+  "founder": {
+    "@type": "Person",
+    "name": "Tapas Upadhyay",
+    "jobTitle": "Founder & CEO",
+  }
+}
+</script>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
