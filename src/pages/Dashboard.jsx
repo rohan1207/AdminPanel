@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../utils/api';
 
 // Icons for the dashboard cards
@@ -62,51 +62,66 @@ const StatCard = ({ title, value, icon, link, loading }) => {
             )}
           </div>
         </div>
-      </div>
     </Link>
   );
 };
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     users: 0,
     blogs: 0,
     examPreps: 0,
     topicSummaries: 0,
     recommendedBooks: 0,
-    loading: true,
-    error: null
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const token = localStorage.getItem('adminToken');
+
+  // Add token validation
+  const isValidToken = (token) => {
+    if (!token) return false;
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return false;
+      const payload = JSON.parse(atob(parts[1]));
+      const now = Math.floor(Date.now() / 1000);
+      if (payload.exp && payload.exp < now) {
+        console.warn('Token is expired');
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.warn('Invalid token format:', err);
+      return false;
+    }
+  };
 
   useEffect(() => {
+    if (!isValidToken(token)) {
+      localStorage.removeItem('adminToken');
+      navigate('/admin/login');
+      return;
+    }
+
     const fetchStats = async () => {
       try {
-        // Check if user is authenticated
-        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
-        if (!token) {
-          window.location.href = '/login';
-          return;
-        }
-
-        // Fetch all data in parallel with error handling for each request
-        const endpoints = [
-          { key: 'users', path: '/users/count' },
-          { key: 'blogs', path: '/blogs/count' },
-          { key: 'examPreps', path: '/exam-preparations/count' },
-          { key: 'topicSummaries', path: '/topic-summaries/count' },
-          { key: 'recommendedBooks', path: '/recommended-books/count' }
-        ];
-
-        const results = await Promise.allSettled(
-          endpoints.map(endpoint => 
-            apiFetch(endpoint.path).catch(error => {
-              console.warn(`Failed to fetch ${endpoint.key}:`, error);
-              return { count: 0 }; // Return default value on error
-            })
-          )
-        );
-
-        // Process results
+        setLoading(true);
+        const data = await apiFetch('stats');
+        setStats({
+          users: data.users || 0,
+          blogs: data.blogs || 0,
+          examPreps: data.examPreps || 0,
+          topicSummaries: data.topicSummaries || 0,
+          recommendedBooks: data.books || 0,
+        });
+      } catch (err) {
+        console.error('Failed to fetch dashboard stats:', err);
+        setError('Failed to load dashboard data. ' + err.message);
+      } finally {
+        setLoading(false);
         const statsData = results.reduce((acc, result, index) => {
           if (result.status === 'fulfilled') {
             acc[endpoints[index].key] = result.value?.count || 0;
