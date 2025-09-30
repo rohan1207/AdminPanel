@@ -25,7 +25,7 @@ const AddBlog = () => {
     slug: '',
     tags: '',
     category: '',
-    status: 'draft',
+    status: 'published',
     readingTime: '',
     keywords: '',
     summaryPoints: [''],
@@ -204,81 +204,72 @@ const AddBlog = () => {
 
   // upload a single File to backend which forwards to Cloudinary
   async function uploadImageFile(file) {
-    // TESTING MODE: Mock the upload without hitting backend
     if (TESTING_MODE) {
-      console.log('MOCK UPLOAD: File would be uploaded to Cloudinary via backend');
-      console.log('File details:', {
-        name: file.name,
-        size: file.size,
-        type: file.type
-      });
-      
-      // Simulate upload delay
+      console.log('MOCK UPLOAD: Simulating file upload.');
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Return a mock Cloudinary URL
-      const mockCloudinaryUrl = `https://res.cloudinary.com/your-cloud/image/upload/v1234567890/${file.name.replace(/\s+/g, '_')}`;
-      console.log('MOCK UPLOAD RESULT:', mockCloudinaryUrl);
-      return mockCloudinaryUrl;
+      return `https://res.cloudinary.com/your-cloud/image/upload/v1234567890/${file.name.replace(/\s+/g, '_')}`;
     }
 
-    // REAL MODE: Actual upload to backend
     console.log('Uploading to backend:', file.name, file.size, 'bytes');
-    
-    // If a File is provided, try to compress it before uploading to save storage
     let fileToUpload = file;
     try {
       if (file instanceof File) {
-        console.log('Compressing image...');
         fileToUpload = await compressImage(file);
         console.log('Compression complete. New size:', fileToUpload.size, 'bytes');
       }
     } catch (err) {
-      console.warn('Compression failed, uploading original file', err);
-      fileToUpload = file;
+      console.warn('Compression failed, uploading original file.', err);
     }
 
     const fd = new FormData();
     fd.append('file', fileToUpload);
     
-    console.log('Sending upload request to /api/blogs/upload...');
-    
     try {
       const res = await fetch('/api/blogs/upload', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: fd,
       });
       
       console.log('Upload response status:', res.status);
-      
+
       if (!res.ok) {
-        const contentType = res.headers.get('content-type') || '';
-        let message = `Upload failed (${res.status})`;
-        try {
-          if (contentType.includes('application/json')) {
-            const errBody = await res.json();
-            message = errBody.error || errBody.message || JSON.stringify(errBody);
-            console.error('Upload error response:', errBody);
-          } else {
-            const txt = await res.text();
-            message = txt || message;
-            console.error('Upload error text:', txt);
-          }
-        } catch (parseError) {
-          console.error('Could not parse error response:', parseError);
-        }
-        throw new Error(message);
+        const errText = await res.text();
+        console.error('Upload error response text:', errText);
+        throw new Error(errText || `Upload failed with status ${res.status}`);
       }
-      
-      const data = await res.json();
-      console.log('Upload successful:', data);
-      return data.url;
-      
+
+      // Robust response parsing: read text once, then interpret
+      const contentType = res.headers.get('content-type') || '';
+      const raw = await res.text();
+      const trimmed = (raw || '').trim();
+      console.log('Upload raw response:', { status: res.status, contentType, bodyPreview: trimmed.slice(0, 120) });
+
+      if (!trimmed) {
+        throw new Error('Upload succeeded but the server returned an empty response.');
+      }
+
+      if (contentType.includes('application/json') || trimmed.startsWith('{') || trimmed.startsWith('[')) {
+        try {
+          const data = JSON.parse(trimmed);
+          if (typeof data === 'string' && /^https?:\/\//i.test(data)) {
+            return data;
+          }
+          if (data && typeof data.url === 'string' && /^https?:\/\//i.test(data.url)) {
+            return data.url;
+          }
+          throw new Error('JSON response did not include a valid URL.');
+        } catch (e) {
+          console.warn('Failed to parse JSON, will try to extract URL from text:', e);
+        }
+      }
+
+      const match = trimmed.match(/https?:\/\/[\w\-._~:\/?#[\]@!$&'()*+,;=%]+/i);
+      if (match) return match[0];
+
+      throw new Error('Received an invalid response from the server.');
     } catch (fetchError) {
-      console.error('Network/fetch error:', fetchError);
+      console.error('Network/fetch error during upload:', fetchError);
       throw new Error(`Network error: ${fetchError.message}`);
     }
   }
@@ -364,13 +355,11 @@ const AddBlog = () => {
     setError('');
     setSuccess('');
     
-    // Check if uploads are still in progress
     if (uploadsInProgress) {
       setError('Image uploads are still in progress. Please wait for them to finish before submitting.');
       return;
     }
 
-    // Collect content from Editor.js
     let content = '';
     let editorOutput = null;
     if (editorRef.current && editorRef.current.save) {
@@ -379,7 +368,6 @@ const AddBlog = () => {
         content = JSON.stringify(editorOutput);
         console.log('Editor content:', JSON.stringify(editorOutput, null, 2));
         
-        // Validate that we have actual content
         if (!editorOutput.blocks || editorOutput.blocks.length === 0) {
           setError('Please add some content to your blog post');
           return;
@@ -395,10 +383,8 @@ const AddBlog = () => {
       return;
     }
 
-    // Validate images and extract URLs
     const { imageUrls, issues } = validateAndExtractImages(editorOutput);
     
-    // Log image information
     console.log('=== IMAGE ANALYSIS ===');
     console.log('Hero Image URL:', form.heroImage || 'None');
     console.log('Content Images:', imageUrls);
@@ -415,7 +401,6 @@ const AddBlog = () => {
       keywords: form.keywords ? form.keywords.split(',').map(k => k.trim()).filter(Boolean) : [],
       readingTime: form.readingTime ? Number(form.readingTime) : 0,
       citations: form.citations.filter(c => c.trim()),
-      // Add image metadata for backend reference
       imageMetadata: {
         heroImageUrl: form.heroImage || null,
         contentImageUrls: imageUrls,
@@ -438,47 +423,38 @@ const AddBlog = () => {
       console.log('Create blog response status:', res.status, res.statusText);
       
       if (res.status === 401) {
-        // Clear invalid token and redirect to login
         localStorage.removeItem('adminToken');
         throw new Error('Your session has expired. Please login again.');
       }
       
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        const errorMessage = data.error || data.message || `Request failed with status ${res.status}`;
-        console.error('Create blog error response:', data);
-        throw new Error(errorMessage);
+        const errText = await res.text();
+        console.error('Create blog error response text:', errText);
+        throw new Error(errText || `Request failed with status ${res.status}`);
       }
-      
-      const created = await res.json();
+
+      // Defensive parsing for the response
+      const contentType = res.headers.get('content-type') || '';
+      let created;
+      if (contentType.includes('application/json')) {
+        created = await res.json();
+      } else {
+        const textResponse = await res.text();
+        console.log('Create blog successful (non-JSON response):', textResponse);
+        created = { id: 'unknown', message: textResponse }; // Fallback object
+      }
+
       console.log('Blog created successfully:', created);
       setSuccess('Blog created and saved successfully!');
       
-      // Optional: Navigate to blog management or view the created blog
-      // navigate('/admin/manage-blogs');
-      // navigate(`/blog/${payload.slug}`);
-      
-      // For now, just log the success and keep the form for creating more blogs
       setTimeout(() => {
         if (window.confirm('Blog created successfully! Would you like to create another blog?')) {
-          // Reset form for new blog
           setForm({
-            mainHeading: '',
-            subHeading: '',
-            slug: '',
-            tags: '',
-            category: '',
-            status: 'draft',
-            readingTime: '',
-            keywords: '',
-            summaryPoints: [''],
-            author: '',
-            heroImage: '',
-            shortDescription: '',
-            citations: [''],
+            mainHeading: '', subHeading: '', slug: '', tags: '', category: '',
+            status: 'published', readingTime: '', keywords: '', summaryPoints: [''],
+            author: '', heroImage: '', shortDescription: '', citations: [''],
           });
           setHeroPreview(null);
-          // Reset editor
           if (editorRef.current && editorRef.current.clear) {
             editorRef.current.clear();
           }
@@ -486,15 +462,7 @@ const AddBlog = () => {
           navigate('/admin/manage-blogs');
         }
       }, 2000);
-      
-      /*
-      // Alternative: For testing, also log to console
-      console.log('=== BLOG PAYLOAD (Sent to MongoDB) ===');
-      console.log(JSON.stringify(payload, null, 2));
-      console.log('=== END PAYLOAD ===');
-      console.log(`Note: ${TESTING_MODE ? 'TESTING MODE - Mock Cloudinary URLs used' : 'PRODUCTION MODE - Real Cloudinary URLs'}`);
-      setSuccess(`Blog data ${TESTING_MODE ? 'logged to console for testing. Mock Cloudinary URLs used (no backend needed)' : 'saved to database with real Cloudinary URLs'}. Check browser console for detailed output.`);
-      */
+
     } catch (err) {
       console.error(err);
       setError(err.message || 'Failed to create blog');
