@@ -11,7 +11,6 @@ const AddBlog = React.lazy(() => import("./pages/AddBlog"));
 const RecommendedBooks = React.lazy(() => import("./pages/RecommendedBooks"));
 const ExamPrep = React.lazy(() => import("./pages/Exam_Prep"));
 const ManageBlogs = React.lazy(() => import("./pages/ManageBlogs"));
-const EditBlog = React.lazy(() => import("./pages/EditBlog")); // Import EditBlog
 const Topic_Summaries = React.lazy(() => import("./pages/Topic_Summaries"));
 const App = () => {
   return (
@@ -40,8 +39,6 @@ const App = () => {
               <Route path="recommend-books" element={<RecommendedBooks />} />
               <Route path="exam-preparation" element={<ExamPrep />} />
               <Route path="manage-blogs" element={<ManageBlogs />} />
-              <Route path="manage-blogs/new" element={<AddBlog />} />
-              <Route path="manage-blogs/edit/:slug" element={<EditBlog />} />
               <Route path="topic-summaries" element={<Topic_Summaries />} />
             </Route>
 
