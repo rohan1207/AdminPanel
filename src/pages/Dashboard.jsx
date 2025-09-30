@@ -34,10 +34,8 @@ const BookIcon = () => (
 );
 
 const StatCard = ({ title, value, icon, link, loading }) => {
-  // Default background color if className check fails
   const getBackgroundColor = () => {
     if (!icon || !icon.props || !icon.props.className) return 'rgba(59, 130, 246, 0.1)';
-    
     const className = icon.props.className;
     if (className.includes('text-blue-500')) return 'rgba(59, 130, 246, 0.1)';
     if (className.includes('text-green-500')) return 'rgba(34, 197, 94, 0.1)';
@@ -47,10 +45,9 @@ const StatCard = ({ title, value, icon, link, loading }) => {
   };
 
   return (
-    <Link to={link} className="block">
-      <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 h-full">
-        <div className="flex items-center">
-          <div className="p-3 rounded-full bg-opacity-10 mr-4" style={{ backgroundColor: getBackgroundColor() }}>
+    <Link to={link} className="block p-4 bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300">
+        <div className="flex items-center space-x-4">
+          <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full" style={{ backgroundColor: getBackgroundColor() }}>
             {icon}
           </div>
           <div>
@@ -80,7 +77,6 @@ const Dashboard = () => {
 
   const token = localStorage.getItem('adminToken');
 
-  // Add token validation
   const isValidToken = (token) => {
     if (!token) return false;
     try {
@@ -122,56 +118,25 @@ const Dashboard = () => {
         setError('Failed to load dashboard data. ' + err.message);
       } finally {
         setLoading(false);
-        const statsData = results.reduce((acc, result, index) => {
-          if (result.status === 'fulfilled') {
-            acc[endpoints[index].key] = result.value?.count || 0;
-          } else {
-            acc[endpoints[index].key] = 0;
-          }
-          return acc;
-        }, {});
-
-        setStats(prev => ({
-          ...prev,
-          ...statsData,
-          loading: false,
-          error: null
-        }));
-
-      } catch (error) {
-        console.error('Error in dashboard:', error);
-        if (error.status === 401 || error.status === 403) {
-          // Handle unauthorized/forbidden - redirect to login
-          localStorage.removeItem('adminToken');
-          localStorage.removeItem('token');
-          window.location.href = '/login';
-        } else {
-          setStats(prev => ({
-            ...prev,
-            error: 'Failed to load dashboard data. Please try again later.',
-            loading: false
-          }));
-        }
       }
     };
 
     fetchStats();
-  }, []);
+  }, [token, navigate]);
 
-  if (stats.error) {
+  if (loading) {
+    return (
+      <div className="p-6">
+        <p>Loading dashboard...</p>
+      </div>
+    );
+  }
+
+  if (error) {
     return (
       <div className="p-6">
         <div className="bg-red-50 border-l-4 border-red-500 p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-red-700">{stats.error}</p>
-            </div>
-          </div>
+          <p className="text-sm text-red-700">{error}</p>
         </div>
       </div>
     );
@@ -186,72 +151,20 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
-          <StatCard
-            title="Total Users"
-            value={stats.users}
-            icon={<UsersIcon />}
-            link="/admin/users"
-            loading={stats.loading}
-          />
-          <StatCard
-            title="Blog Posts"
-            value={stats.blogs}
-            icon={<BlogIcon />}
-            link="/admin/manage-blogs"
-            loading={stats.loading}
-          />
-          <StatCard
-            title="Exam Preps"
-            value={stats.examPreps}
-            icon={<ExamIcon />}
-            link="/admin/exam-preparation"
-            loading={stats.loading}
-          />
-          <StatCard
-            title="Topic Summaries"
-            value={stats.topicSummaries}
-            icon={<TopicIcon />}
-            link="/admin/topic-summaries"
-            loading={stats.loading}
-          />
-          <StatCard
-            title="Recommended Books"
-            value={stats.recommendedBooks}
-            icon={<BookIcon />}
-            link="/admin/recommend-books"
-            loading={stats.loading}
-          />
+          <StatCard title="Total Users" value={stats.users} icon={<UsersIcon />} link="/admin/users" loading={loading} />
+          <StatCard title="Blog Posts" value={stats.blogs} icon={<BlogIcon />} link="/admin/manage-blogs" loading={loading} />
+          <StatCard title="Exam Preps" value={stats.examPreps} icon={<ExamIcon />} link="/admin/exam-preparation" loading={loading} />
+          <StatCard title="Topic Summaries" value={stats.topicSummaries} icon={<TopicIcon />} link="/admin/topic-summaries" loading={loading} />
+          <StatCard title="Recommended Books" value={stats.recommendedBooks} icon={<BookIcon />} link="/admin/recommend-books" loading={loading} />
         </div>
 
-        {/* Add more dashboard sections here as needed */}
-        
         <div className="bg-white rounded-xl shadow-md p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Link
-              to="/admin/manage-blogs/new"
-              className="p-4 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center text-center"
-            >
-              <span>+ New Blog Post</span>
-            </Link>
-            <Link
-              to="/admin/exam-preparation/new"
-              className="p-4 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors flex items-center justify-center text-center"
-            >
-              <span>+ New Exam Prep</span>
-            </Link>
-            <Link
-              to="/admin/topic-summaries/new"
-              className="p-4 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors flex items-center justify-center text-center"
-            >
-              <span>+ New Topic Summary</span>
-            </Link>
-            <Link
-              to="/admin/recommend-books/new"
-              className="p-4 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center text-center"
-            >
-              <span>+ Add Book</span>
-            </Link>
+            <Link to="/admin/add-blog" className="p-4 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center text-center">+ New Blog Post</Link>
+            <Link to="/admin/exam-preparation/new" className="p-4 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors flex items-center justify-center text-center">+ New Exam Prep</Link>
+            <Link to="/admin/topic-summaries/new" className="p-4 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors flex items-center justify-center text-center">+ New Topic Summary</Link>
+            <Link to="/admin/recommend-books/new" className="p-4 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center text-center">+ Add Book</Link>
           </div>
         </div>
       </div>
