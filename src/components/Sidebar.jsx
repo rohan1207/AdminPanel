@@ -153,21 +153,15 @@ const Sidebar = () => {
                     `flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200
                     ${
                       isActive
-                        ? 'bg-[#006D5B] text-white shadow-sm'
-                        : 'text-gray-600 hover:bg-gray-50'
+                        ? 'bg-[#006D5B] text-white shadow-sm [&_span]:text-white'
+                        : 'text-gray-600 hover:bg-gray-50 [&_span]:text-[#006D5B]'
                     }`
                   }
                   style={{
-                    margin: '0.25rem 0',
-                    color: colors.text.secondary
+                    margin: '0.25rem 0'
                   }}
                 >
-                  <span 
-                    className="text-xl"
-                    style={{
-                      color: colors.primary[500]
-                    }}
-                  >
+                  <span className="text-xl">
                     {l.icon}
                   </span>
                   <span className="text-sm font-medium">{l.label}</span>

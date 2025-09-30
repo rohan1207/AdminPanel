@@ -14,13 +14,31 @@ import {
   FaShoppingCart
 } from 'react-icons/fa';
 import { apiFetch } from '../utils/api';
-import { useAuth } from '../context/AuthContext';
 
 const RecommendedBooks = () => {
-  const { token, logout } = useAuth();
   const navigate = useNavigate();
-
-  const [books, setBooks] = useState([]);
+  const token = localStorage.getItem('adminToken');
+  
+  const isValidToken = (tokenToValidate) => {
+    if (!tokenToValidate) return false;
+    try {
+      const parts = tokenToValidate.split('.');
+      if (parts.length !== 3) return false;
+      
+      const payload = JSON.parse(atob(parts[1]));
+      const now = Math.floor(Date.now() / 1000);
+      
+      if (payload.exp && payload.exp < now) {
+        return false;
+      }
+      
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+  
+  const [books, setBooks] = useState(() => []); // Ensure it's always an array
   const [pageLoading, setPageLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,26 +61,67 @@ const RecommendedBooks = () => {
 
   // Fetch all books
   const fetchBooks = async () => {
+    setPageLoading(true);
+    
     try {
-      const data = await apiFetch('/books/all');
-      setBooks(data);
+      const response = await apiFetch('/books');
+      
+      // Handle different response formats
+      const booksData = Array.isArray(response) 
+        ? response 
+        : Array.isArray(response?.data) 
+          ? response.data 
+          : Array.isArray(response?.books) 
+            ? response.books 
+            : [];
+      
+      setBooks(booksData);
     } catch (error) {
-      console.error('Error fetching books:', error);
       if (error.status === 401) {
-        logout();
-        navigate('/admin/login');
+        localStorage.removeItem('adminToken');
+        window.location.href = '/admin/login';
+        return;
       }
+      
       toast.error(error.message || 'Failed to load books');
+      setBooks([]);
     } finally {
       setPageLoading(false);
     }
   };
 
+  // Fetch books when component mounts or token changes
   useEffect(() => {
     if (token) {
       fetchBooks();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
+
+  // Check if user is authenticated
+  if (!token || !isValidToken(token)) {
+    return (
+      <div className="p-6">
+        <h2 className="text-xl font-semibold mb-4 text-brand">Recommended Books</h2>
+        <div className="bg-red-50 border border-red-200 rounded p-4">
+          <p className="text-sm text-red-600 mb-3">
+            {!token ? 'No admin token found.' : 'Your admin session has expired.'}
+            <br />
+            You must be logged in as admin to manage books.
+          </p>
+          <button 
+            onClick={() => {
+              localStorage.removeItem('adminToken');
+              window.location.href = '/admin/login';
+            }}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Go to Admin Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     const { title, author, description, coverImage } = formData;
@@ -231,11 +290,23 @@ const RecommendedBooks = () => {
   };
 
   // Filter books based on search term
-  const filteredBooks = books.filter(book =>
-    (book.title && book.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (book.author && book.author.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (book.tags && book.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
-  );
+  const filteredBooks = React.useMemo(() => {
+    if (!Array.isArray(books)) return [];
+    
+    const term = searchTerm.toLowerCase().trim();
+    if (!term) return [...books].sort((a, b) => (a.order || 0) - (b.order || 0));
+    
+    return books.filter(book => {
+      if (!book) return false;
+      
+      const titleMatch = book.title && book.title.toLowerCase().includes(term);
+      const authorMatch = book.author && book.author.toLowerCase().includes(term);
+      const tagsMatch = Array.isArray(book.tags) && 
+        book.tags.some(tag => tag && typeof tag === 'string' && tag.toLowerCase().includes(term));
+      
+      return titleMatch || authorMatch || tagsMatch;
+    });
+  }, [books, searchTerm]);
 
   // Reset form
   const resetForm = () => {
@@ -297,14 +368,25 @@ const RecommendedBooks = () => {
         </div>
       </div>
 
+     
+
       {/* Books Grid */}
       {pageLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="flex flex-col items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+          <p className="text-gray-600">Loading books...</p>
+          <p className="text-sm text-gray-500">Checking API response...</p>
         </div>
       ) : filteredBooks.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <p className="text-gray-500 text-lg">No books found. Add your first book recommendation!</p>
+          <p className="text-gray-500 text-lg">
+            {Array.isArray(books) && books.length === 0 
+              ? 'No books found. Add your first book recommendation!' 
+              : 'No books match your search.'}
+          </p>
+          <p className="text-sm text-gray-400 mt-2">
+            Showing 0 of {Array.isArray(books) ? books.length : '0'} books
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -656,7 +738,7 @@ const RecommendedBooks = () => {
                           />
                         </div>
                       </div>
-                      <p className="text-xs text-gray-500">Lower numbers appear first in the list</p>
+                      <p className="text-xs text-gray-500">Lower Display Order numbers appear first in the list</p>
                     </div>
                   </div>
                 </div>

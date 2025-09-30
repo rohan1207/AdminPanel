@@ -81,30 +81,62 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // Fetch all data in parallel
-        const [usersData, blogsData, examPrepsData, topicSummariesData, booksData] = await Promise.all([
-          apiFetch('/users/count'),
-          apiFetch('/blogs/count'),
-          apiFetch('/exam-preparations/count'),
-          apiFetch('/topic-summaries/count'),
-          apiFetch('/recommended-books/count')
-        ]);
+        // Check if user is authenticated
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+        if (!token) {
+          window.location.href = '/login';
+          return;
+        }
 
-        setStats({
-          users: usersData.count || 0,
-          blogs: blogsData.count || 0,
-          examPreps: examPrepsData.count || 0,
-          topicSummaries: topicSummariesData.count || 0,
-          recommendedBooks: booksData.count || 0,
-          loading: false
-        });
-      } catch (error) {
-        console.error('Error fetching stats:', error);
+        // Fetch all data in parallel with error handling for each request
+        const endpoints = [
+          { key: 'users', path: '/users/count' },
+          { key: 'blogs', path: '/blogs/count' },
+          { key: 'examPreps', path: '/exam-preparations/count' },
+          { key: 'topicSummaries', path: '/topic-summaries/count' },
+          { key: 'recommendedBooks', path: '/recommended-books/count' }
+        ];
+
+        const results = await Promise.allSettled(
+          endpoints.map(endpoint => 
+            apiFetch(endpoint.path).catch(error => {
+              console.warn(`Failed to fetch ${endpoint.key}:`, error);
+              return { count: 0 }; // Return default value on error
+            })
+          )
+        );
+
+        // Process results
+        const statsData = results.reduce((acc, result, index) => {
+          if (result.status === 'fulfilled') {
+            acc[endpoints[index].key] = result.value?.count || 0;
+          } else {
+            acc[endpoints[index].key] = 0;
+          }
+          return acc;
+        }, {});
+
         setStats(prev => ({
           ...prev,
-          error: 'Failed to load dashboard data',
-          loading: false
+          ...statsData,
+          loading: false,
+          error: null
         }));
+
+      } catch (error) {
+        console.error('Error in dashboard:', error);
+        if (error.status === 401 || error.status === 403) {
+          // Handle unauthorized/forbidden - redirect to login
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        } else {
+          setStats(prev => ({
+            ...prev,
+            error: 'Failed to load dashboard data. Please try again later.',
+            loading: false
+          }));
+        }
       }
     };
 
