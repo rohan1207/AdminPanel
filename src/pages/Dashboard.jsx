@@ -88,40 +88,22 @@ const Dashboard = () => {
           return;
         }
 
-        // Fetch all data in parallel with error handling for each request
-        const endpoints = [
-          { key: 'users', path: '/users/count' },
-          { key: 'blogs', path: '/blogs/count' },
-          { key: 'examPreps', path: '/exam-preparations/count' },
-          { key: 'topicSummaries', path: '/topic-summaries/count' },
-          { key: 'recommendedBooks', path: '/recommended-books/count' }
-        ];
+        // Fetch all stats from the single /stats endpoint
+        const response = await apiFetch('/stats');
 
-        const results = await Promise.allSettled(
-          endpoints.map(endpoint => 
-            apiFetch(endpoint.path).catch(error => {
-              console.warn(`Failed to fetch ${endpoint.key}:`, error);
-              return { count: 0 }; // Return default value on error
-            })
-          )
-        );
-
-        // Process results
-        const statsData = results.reduce((acc, result, index) => {
-          if (result.status === 'fulfilled') {
-            acc[endpoints[index].key] = result.value?.count || 0;
-          } else {
-            acc[endpoints[index].key] = 0;
-          }
-          return acc;
-        }, {});
-
-        setStats(prev => ({
-          ...prev,
-          ...statsData,
-          loading: false,
-          error: null
-        }));
+        if (response && response.success) {
+          setStats({
+            users: response.data.users || 0,
+            blogs: response.data.blogs || 0,
+            examPreps: response.data.examPreps || 0,
+            topicSummaries: response.data.topicSummaries || 0,
+            recommendedBooks: response.data.books || 0, // Note the key is 'books'
+            loading: false,
+            error: null
+          });
+        } else {
+          throw new Error(response.message || 'Failed to fetch dashboard stats');
+        }
 
       } catch (error) {
         console.error('Error in dashboard:', error);
