@@ -412,7 +412,7 @@ const AddBlog = () => {
     try {
       setLoading(true);
       
-      const res = await fetch('/api/blogs', {
+      const res = await fetch(`${API_BASE}/blogs`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
