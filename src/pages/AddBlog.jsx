@@ -7,6 +7,7 @@ import ImageTool from '@editorjs/image';
 import Quote from '@editorjs/quote';
 import Table from '@editorjs/table';
 import { compressImage } from "../utils/compressImage";
+import { API_BASE } from "../utils/api";
 
 const AddBlog = () => {
   // Helper to update form fields
@@ -225,7 +226,7 @@ const AddBlog = () => {
     fd.append('file', fileToUpload);
     
     try {
-      const res = await fetch('/api/blogs/upload', {
+      const res = await fetch(`${API_BASE}/blogs/upload`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: fd,
