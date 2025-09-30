@@ -434,15 +434,31 @@ const AddBlog = () => {
         throw new Error(errText || `Request failed with status ${res.status}`);
       }
 
-      // Defensive parsing for the response
+      // Robust response parsing similar to upload: read once, then interpret
       const contentType = res.headers.get('content-type') || '';
+      const raw = await res.text();
+      const trimmed = (raw || '').trim();
+      console.log('Create blog raw response:', { status: res.status, contentType, bodyPreview: trimmed.slice(0, 200) });
+
+      if (!trimmed) {
+        throw new Error('Create blog: server returned an empty response.');
+      }
+
       let created;
-      if (contentType.includes('application/json')) {
-        created = await res.json();
+      if (contentType.includes('application/json') || trimmed.startsWith('{') || trimmed.startsWith('[')) {
+        try {
+          created = JSON.parse(trimmed);
+        } catch (e) {
+          throw new Error('Create blog: invalid JSON returned by server.');
+        }
       } else {
-        const textResponse = await res.text();
-        console.log('Create blog successful (non-JSON response):', textResponse);
-        created = { id: 'unknown', message: textResponse }; // Fallback object
+        // Not JSON => treat as error to avoid false positive
+        throw new Error(`Create blog: unexpected response type (${contentType || 'unknown'}).`);
+      }
+
+      // Validate expected fields
+      if (!created || created.success !== true || !created.blog || !created.blog.slug) {
+        throw new Error('Create blog: response missing success/blog data.');
       }
 
       console.log('Blog created successfully:', created);
